@@ -32,6 +32,7 @@ export const App = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
+      setPage(1);
       setIsLoading(true);
       setResponse({
         data: { hits: [], totalHits: 0 },
@@ -44,7 +45,6 @@ export const App = () => {
         },
       });
       setIsSubmitted(true);
-      setPage(1);
     } catch (error) {
       setError(error);
       console.log(error);
@@ -61,13 +61,13 @@ export const App = () => {
     if (isSubmitted) {
       fetchImages();
     }
-  }, [isSubmitted, fetchImages]);
+  }, []);
 
   useEffect(() => {
     if (page > 1) {
       fetchImages();
     }
-  }, [page, fetchImages]);
+  }, [page, isSubmitted]);
 
   const handleChange = e => {
     setInputValue(e.target.value);
