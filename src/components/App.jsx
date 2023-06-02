@@ -61,13 +61,13 @@ export const App = () => {
     if (isSubmitted) {
       fetchImages();
     }
-  }, [isSubmitted]);
+  }, [isSubmitted, fetchImages]);
 
   useEffect(() => {
     if (page > 1) {
       fetchImages();
     }
-  }, [page]);
+  }, [page, fetchImages]);
 
   const handleChange = e => {
     setInputValue(e.target.value);
