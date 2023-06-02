@@ -1,76 +1,90 @@
-import React, { Component } from "react";
-import { SearchBar } from "./Searchbar/Searchbar";
-import { ImageGallery } from "./ImageGallery/ImageGallery";
+import React, { useState, useEffect } from 'react';
+import { SearchBar } from './Searchbar/Searchbar';
+import { ImageGallery } from './ImageGallery/ImageGallery';
 import { getImages } from 'components/ImagesAPI/imagesApi';
 import { ButtonLoadMore } from './ButtonLoadMore/ButtonLoadMore';
 
-export class App extends Component {
-  state = {
-    isSubmitted: false,
-    inputValue: '',
-    response: { data: { hits: [], totalHits: 0 } },
-    error: null,
-    page: 1,
-    isLoading: false
-  };
+export const App = () => {
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [response, setResponse] = useState({
+    data: { hits: [], totalHits: 0 },
+  });
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
-  handleSubmit = async (e) => {
-    e.preventDefault();
-    this.setState({ isSubmitted: true, error: null, response: { data: { hits: [], totalHits: 0 } }, page: 1, isLoading: true }, () => {
-      this.fetchImages();
-    });
-  };
-
-  loadMore = async () => {
-    this.setState((prev) => ({ page: prev.page + 1 }), () => {
-      this.fetchImages();
-    });
-  };
-
-  fetchImages = async () => {
+  const fetchImages = async () => {
     try {
-      const response = await getImages(this.state.inputValue, this.state.page);
-      this.setState((prev) => ({
-        response: {
-          data: {
-            hits: [...prev.response.data.hits, ...response.data.hits],
-            totalHits: response.data.totalHits
-          },
+      const response = await getImages(inputValue, page);
+      setResponse(prevResponse => ({
+        data: {
+          hits: [...prevResponse.data.hits, ...response.data.hits],
+          totalHits: response.data.totalHits,
         },
-        isLoading: false,
       }));
     } catch (error) {
-      this.setState({ error });
+      setError(error);
       console.log(error);
     }
   };
 
-  handleChange = (e) => {
-    this.setState({ inputValue: e.target.value });
+  const handleSubmit = async e => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      setResponse({
+        data: { hits: [], totalHits: 0 },
+      });
+      const response = await getImages(inputValue, 1);
+      setResponse({
+        data: {
+          hits: response.data.hits,
+          totalHits: response.data.totalHits,
+        },
+      });
+      setIsSubmitted(true);
+      setPage(1);
+    } catch (error) {
+      setError(error);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  render() {
-    const { isSubmitted, response, error, isLoading } = this.state;
-    const { hits, totalHits } = response.data;
-    const showLoadMoreButton = hits.length < totalHits;
+  const loadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
 
-    return (
-      <div>
-        <SearchBar handleSubmit={this.handleSubmit} handleChange={this.handleChange} />
-        {isSubmitted && !error && (
-          <>
-            <ImageGallery
-              isSubmitted={isSubmitted}
-              response={response}
-              isLoading={isLoading}
-              fetchImages={this.fetchImages}
-            />
-            {showLoadMoreButton && (
-              <ButtonLoadMore loadMore={this.loadMore} />
-            )}
-          </>
-        )}
-      </div>
-    );
-  }
-}
+  useEffect(() => {
+    if (isSubmitted) {
+      fetchImages();
+    }
+  }, [isSubmitted]);
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchImages();
+    }
+  }, [page]);
+
+  const handleChange = e => {
+    setInputValue(e.target.value);
+  };
+
+  const { hits, totalHits } = response.data;
+  const showLoadMoreButton = hits.length < totalHits;
+
+  return (
+    <div>
+      <SearchBar handleSubmit={handleSubmit} handleChange={handleChange} />
+      {isSubmitted && !error && (
+        <>
+          <ImageGallery hits={hits} isLoading={isLoading} />
+          {showLoadMoreButton && <ButtonLoadMore loadMore={loadMore} />}
+        </>
+      )}
+    </div>
+  );
+};

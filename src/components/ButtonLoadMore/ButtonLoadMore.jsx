@@ -1,12 +1,15 @@
-import { Component } from "react";
+import React from 'react';
 import s from './Button.module.css';
 
+export const ButtonLoadMore = ({ loadMore }) => {
+  const handleClick = event => {
+    event.preventDefault();
+    loadMore();
+  };
 
-
-export class ButtonLoadMore extends Component {
-    render() {
-        return (
-            <button className={s.Button} type="button" onClick={this.props.loadMore}>Load more</button>
-    );
-}
+  return (
+    <button className={s.Button} type="button" onClick={handleClick}>
+      Load more
+    </button>
+  );
 };
